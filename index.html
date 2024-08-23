@@ -33,6 +33,23 @@
       button {
         display: block;
       }
+
+      .outputElement {
+        margin: 1rem 0;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+      }
+
+      .outputElement img {
+        max-width: 100%;
+        max-height: 100px;
+      }
     </style>
     <h1>How to paste images</h1>
     <p>
@@ -42,74 +59,92 @@
     </p>
     <hr />
     <form>
-        <h2>Form to test input focuses for safari</h2>
-        <input type="text" placeholder="regular text input" />
-        <input type="text" id="superfocus" placeholder="superfocus" autofocus />
+      <h2>Form to test input focuses for safari</h2>
+      <input type="text" placeholder="regular text input" />
+      <input type="text" id="superfocus" placeholder="superfocus" autofocus />
     </form>
     <hr />
 
+    <div id="output"></div>
 
     <script>
-        const superFocusInput = document.getElementById('superfocus');
+      const superFocusInput = document.getElementById("superfocus");
 
-        superFocusInput.addEventListener('blur', (e) => {
-            console.log('blur', e);
-            e.target.focus(); //return focus to the input
-        });
+      superFocusInput.addEventListener("blur", (e) => {
+        console.log("blur", e);
+        e.target.focus(); //return focus to the input
+      });
 
-        document.addEventListener("paste", async (e) => {
-          console.log("Pasting...");
-          e.preventDefault();
-          const clipboardItems =
-            typeof navigator?.clipboard?.read === "function"
-              ? await navigator.clipboard.read()
-              : e.clipboardData.files;
-  
-              console.log("clipboardItems", clipboardItems);
-  
-          for (const clipboardItem of clipboardItems) {
-            let blob;
-            if (clipboardItem.type?.startsWith("image/")) {
-              // For files from `e.clipboardData.files`.
-              blob = clipboardItem;
+      document.addEventListener("paste", async (e) => {
+        console.log("Pasting...");
+        e.preventDefault();
+        const clipboardItems =
+          typeof navigator?.clipboard?.read === "function"
+            ? await navigator.clipboard.read()
+            : e.clipboardData.files;
+
+        console.log("clipboardItems", clipboardItems);
+
+        for (const clipboardItem of clipboardItems) {
+          let blob;
+          if (clipboardItem.type?.startsWith("image/")) {
+            // For files from `e.clipboardData.files`.
+            blob = clipboardItem;
+            // Do something with the blob.
+            appendImage(blob);
+            return;
+          } else {
+            // For files from `navigator.clipboard.read()`.
+            const imageTypes = clipboardItem.types?.filter((type) =>
+              type.startsWith("image/")
+            );
+            for (const imageType of imageTypes) {
+              blob = await clipboardItem.getType(imageType);
               // Do something with the blob.
               appendImage(blob);
               return;
-            } else {
-              // For files from `navigator.clipboard.read()`.
-              const imageTypes = clipboardItem.types?.filter((type) =>
-                type.startsWith("image/")
-              );
-              for (const imageType of imageTypes) {
-                blob = await clipboardItem.getType(imageType);
-                // Do something with the blob.
-                appendImage(blob);
-                return;
-              }
-            }
-  
-            try {
-              //get texts from clipboard
-              const textBlob = await clipboardItem.getType("text/plain");
-              const text = await textBlob.text();
-              appendText(text);
-            } catch (ex) {
-              console.error(ex);
             }
           }
-        });
-  
-        const appendText = (text) => {
-          const p = document.createElement("p");
-          p.textContent = text;
-          document.body.append(p);
-        };
-  
-        const appendImage = (blob) => {
-          const img = document.createElement("img");
-          img.src = URL.createObjectURL(blob);
-          document.body.append(img);
-        };
-      </script>
+
+          try {
+            //get texts from clipboard
+            const textBlob = await clipboardItem.getType("text/plain");
+            const text = await textBlob.text();
+            appendText(text);
+          } catch (ex) {
+            console.error(ex);
+          }
+        }
+      });
+
+      const appendText = (text) => {
+        const div = document.createElement("div");
+        div.classList.add("outputElement");
+        const p = document.createElement("p");
+        p.textContent = text;
+        div.append(p);
+
+        const timestampSpan = document.createElement("span");
+        timestampSpan.textContent = new Date().toLocaleTimeString();
+        div.append(timestampSpan);
+
+        document.getElementById("output").prepend(div);
+      };
+
+      const appendImage = (blob) => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(blob);
+
+        const div = document.createElement("div");
+        div.classList.add("outputElement");
+        div.append(img);
+
+        const timestampSpan = document.createElement("span");
+        timestampSpan.textContent = new Date().toLocaleTimeString();
+        div.append(timestampSpan);
+
+        document.getElementById("output").prepend(div);
+      };
+    </script>
   </body>
 </html>
