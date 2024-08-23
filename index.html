@@ -7,42 +7,7 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎉</text></svg>"
     />
-    <title>How to paste images</title>
-    <script>
-      document.addEventListener("paste", async (e) => {
-        e.preventDefault();
-        const clipboardItems =
-          typeof navigator?.clipboard?.read === "function"
-            ? await navigator.clipboard.read()
-            : e.clipboardData.files;
-
-        for (const clipboardItem of clipboardItems) {
-          let blob;
-          if (clipboardItem.type?.startsWith("image/")) {
-            // For files from `e.clipboardData.files`.
-            blob = clipboardItem;
-            // Do something with the blob.
-            appendImage(blob);
-          } else {
-            // For files from `navigator.clipboard.read()`.
-            const imageTypes = clipboardItem.types?.filter((type) =>
-              type.startsWith("image/")
-            );
-            for (const imageType of imageTypes) {
-              blob = await clipboardItem.getType(imageType);
-              // Do something with the blob.
-              appendImage(blob);
-            }
-          }
-        }
-      });
-
-      const appendImage = (blob) => {
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(blob);
-        document.body.append(img);
-      };
-    </script>
+    <title>How to paste images and text (even in Safari)</title>
   </head>
   <body>
     <style>
@@ -75,5 +40,69 @@
       <kbd>v</kbd>
       (for other operating systems) to paste images anywhere in this page.
     </p>
+    <hr />
+    <form>
+        <h2>Form to test input focuses for safari</h2>
+        <input type="text" placeholder="regular text input" />
+        <input type="text" id="superfocus" placeholder="superfocus" autofocus onblur="(e) => {
+            console.log('blur', e);
+            e.target.focus(); //return focus to the input
+        }" />
+    </form>
+    <hr />
+
+
+    <script>
+        document.addEventListener("paste", async (e) => {
+          console.log("Pasting...");
+          e.preventDefault();
+          const clipboardItems =
+            typeof navigator?.clipboard?.read === "function"
+              ? await navigator.clipboard.read()
+              : e.clipboardData.files;
+  
+              console.log("clipboardItems", clipboardItems);
+  
+          for (const clipboardItem of clipboardItems) {
+            let blob;
+            if (clipboardItem.type?.startsWith("image/")) {
+              // For files from `e.clipboardData.files`.
+              blob = clipboardItem;
+              // Do something with the blob.
+              appendImage(blob);
+            } else {
+              // For files from `navigator.clipboard.read()`.
+              const imageTypes = clipboardItem.types?.filter((type) =>
+                type.startsWith("image/")
+              );
+              for (const imageType of imageTypes) {
+                blob = await clipboardItem.getType(imageType);
+                // Do something with the blob.
+                appendImage(blob);
+              }
+            }
+  
+            try {
+              //get texts from clipboard
+              const text = await clipboardItem.getType("text/plain");
+              appendText(text);
+            } catch (ex) {
+              console.error(ex);
+            }
+          }
+        });
+  
+        const appendText = (text) => {
+          const p = document.createElement("p");
+          p.textContent = text;
+          document.body.append(p);
+        };
+  
+        const appendImage = (blob) => {
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(blob);
+          document.body.append(img);
+        };
+      </script>
   </body>
 </html>
