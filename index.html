@@ -44,15 +44,19 @@
     <form>
         <h2>Form to test input focuses for safari</h2>
         <input type="text" placeholder="regular text input" />
-        <input type="text" id="superfocus" placeholder="superfocus" autofocus onblur="(e) => {
-            console.log('blur', e);
-            e.target.focus(); //return focus to the input
-        }" />
+        <input type="text" id="superfocus" placeholder="superfocus" autofocus />
     </form>
     <hr />
 
 
     <script>
+        const superFocusInput = document.getElementById('superfocus');
+
+        superFocusInput.addEventListener('blur', (e) => {
+            console.log('blur', e);
+            e.target.focus(); //return focus to the input
+        });
+
         document.addEventListener("paste", async (e) => {
           console.log("Pasting...");
           e.preventDefault();
@@ -70,6 +74,7 @@
               blob = clipboardItem;
               // Do something with the blob.
               appendImage(blob);
+              return;
             } else {
               // For files from `navigator.clipboard.read()`.
               const imageTypes = clipboardItem.types?.filter((type) =>
@@ -79,12 +84,14 @@
                 blob = await clipboardItem.getType(imageType);
                 // Do something with the blob.
                 appendImage(blob);
+                return;
               }
             }
   
             try {
               //get texts from clipboard
-              const text = await clipboardItem.getType("text/plain");
+              const textBlob = await clipboardItem.getType("text/plain");
+              const text = await textBlob.text();
               appendText(text);
             } catch (ex) {
               console.error(ex);
