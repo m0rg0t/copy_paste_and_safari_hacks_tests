@@ -75,6 +75,23 @@
         e.target.focus(); //return focus to the input
       });
 
+      document.addEventListener("drop", (e) => {
+        console.log("Dropping...");
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        for (const file of files) {
+          if (file.type.startsWith("image/")) {
+            appendImage(file);
+          } else {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              appendText(e.target.result);
+            };
+            reader.readAsText(file);
+          }
+        }
+      });
+
       document.addEventListener("paste", async (e) => {
         console.log("Pasting...");
         e.preventDefault();
@@ -83,40 +100,70 @@
             ? await navigator.clipboard.read()
             : e.clipboardData.files;
 
-        console.log("clipboardItems", clipboardItems);
+        console.log("clipboardItems", {
+          clipboardItems: clipboardItems,
+          clipboardData: e.clipboardData,
+          files: e.clipboardData.files,
+          items: e.clipboardData.items,
+          windowClipboardData: window.clipboardData,
+          //itemsKind: e.clipboardData.items.map(item => item?.kind)
+        });
 
         for (const clipboardItem of clipboardItems) {
-          let blob;
-          console.log("clipboardItem.type", clipboardItem.type);
-          if (clipboardItem.type?.startsWith("image/")) {
-            // For files from `e.clipboardData.files`.
-            blob = clipboardItem;
-            // Do something with the blob.
-            appendImage(blob);
-            return;
-          } else {
-            // For files from `navigator.clipboard.read()`.
-            const imageTypes = clipboardItem.types?.filter((type) =>
-              type.startsWith("image/")
-            );
-            console.log("clipboardItem.types", clipboardItem.types);
-            for (const imageType of imageTypes) {
-              blob = await clipboardItem.getType(imageType);
-              // Do something with the blob.
-              appendImage(blob);
-              return;
+          for (const type of clipboardItem.types) {
+            console.log("type", type);
+            switch (true) {
+              case type.startsWith("image/"):
+                const blob = await clipboardItem.getType(type);
+                appendImage(blob);
+                return;
+              case type === "text/plain":
+                const textBlob = await clipboardItem.getType(type);
+                const text = await textBlob.text();
+                appendText(text);
+                return;
+              case type === "text/html":
+                const htmlBlob = await clipboardItem.getType(type);
+                const html = await htmlBlob.text();
+                appendText(html);
+                return;
+              default:
+                console.log("type not handled", type);
             }
           }
-
-          try {
-            //get texts from clipboard
-            const textBlob = await clipboardItem.getType("text/plain");
-            const text = await textBlob.text();
-            appendText(text);
-          } catch (ex) {
-            console.error(ex);
-          }
         }
+
+        // for (const clipboardItem of clipboardItems) {
+        //   let blob;
+        //   console.log("clipboardItem.type", clipboardItem.type);
+        //   if (clipboardItem.type?.startsWith("image/")) {
+        //     // For files from `e.clipboardData.files`.
+        //     blob = clipboardItem;
+        //     // Do something with the blob.
+        //     appendImage(blob);
+        //     return;
+        //   } else {
+        //     // For files from `navigator.clipboard.read()`.
+        //     const imageTypes = clipboardItem.types?.filter((type) =>
+        //       type.startsWith("image/")
+        //     );
+        //     console.log("clipboardItem.types", clipboardItem.types);
+        //     for (const imageType of imageTypes) {
+        //       blob = await clipboardItem.getType(imageType);
+        //       // Do something with the blob.
+        //       appendImage(blob);
+        //       return;
+        //     }
+        //   }
+        //   try {
+        //     //get texts from clipboard
+        //     const textBlob = await clipboardItem.getType("text/plain");
+        //     const text = await textBlob.text();
+        //     appendText(text);
+        //   } catch (ex) {
+        //     console.error(ex);
+        //   }
+        // }
       });
 
       const appendText = (text) => {
