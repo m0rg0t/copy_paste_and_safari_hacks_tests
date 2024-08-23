@@ -87,6 +87,7 @@
 
         for (const clipboardItem of clipboardItems) {
           let blob;
+          console.log("clipboardItem.type", clipboardItem.type);
           if (clipboardItem.type?.startsWith("image/")) {
             // For files from `e.clipboardData.files`.
             blob = clipboardItem;
@@ -98,6 +99,7 @@
             const imageTypes = clipboardItem.types?.filter((type) =>
               type.startsWith("image/")
             );
+            console.log("clipboardItem.types", clipboardItem.types);
             for (const imageType of imageTypes) {
               blob = await clipboardItem.getType(imageType);
               // Do something with the blob.
