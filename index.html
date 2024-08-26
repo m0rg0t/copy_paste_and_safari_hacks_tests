@@ -61,7 +61,7 @@
     <form>
       <h2>Form to test input focuses for safari</h2>
       <input type="text" placeholder="regular text input" />
-      <input type="text" id="superfocus" placeholder="superfocus" autofocus />
+      <textarea id="superfocus" placeholder="superfocus" autofocus></textarea>
     </form>
     <hr />
 
@@ -93,23 +93,46 @@
       });
 
       document.addEventListener("paste", async (e) => {
-        console.log("Pasting...");
-        e.preventDefault();
-        const clipboardItems =
-          typeof navigator?.clipboard?.read === "function"
-            ? await navigator.clipboard.read()
-            : e.clipboardData.files;
+        console.log("Pasting...", e.clipboardData.files[0]);
+        let clipboardItems = e.clipboardData.files;
 
-        console.log("clipboardItems", {
-          clipboardItems: clipboardItems,
-          clipboardData: e.clipboardData,
-          files: e.clipboardData.files,
-          items: e.clipboardData.items,
-          windowClipboardData: window.clipboardData,
-          //itemsKind: e.clipboardData.items.map(item => item?.kind)
-        });
+        e.preventDefault();
+        if (clipboardItems.length > 0) {
+          for (const clipboardItem of clipboardItems) {
+            console.log(
+              "files",
+              clipboardItem,
+              clipboardItem.arrayBuffer
+            );
+
+            if (clipboardItem.type.startsWith("image/")) {
+
+              const reader = new FileReader();
+              
+            reader.onloadend = () => {
+                const blob = new Blob([reader.result], {type: clipboardItem.type});
+                console.log("blob", blob, blob.type);
+                // Use the blob as needed
+                appendImage(blob);
+            };
+              reader.readAsArrayBuffer(clipboardItem);
+              return;
+            }
+          }
+        } else {
+          clipboardItems =
+            typeof navigator?.clipboard?.read === "function"
+              ? await navigator.clipboard.read()
+              : e.clipboardData.files;
+        }
 
         for (const clipboardItem of clipboardItems) {
+          console.log(
+            "clipboardItem",
+            clipboardItem,
+            clipboardItem.arrayBuffer
+          );
+
           for (const type of clipboardItem.types) {
             console.log("type", type);
             switch (true) {
@@ -132,38 +155,6 @@
             }
           }
         }
-
-        // for (const clipboardItem of clipboardItems) {
-        //   let blob;
-        //   console.log("clipboardItem.type", clipboardItem.type);
-        //   if (clipboardItem.type?.startsWith("image/")) {
-        //     // For files from `e.clipboardData.files`.
-        //     blob = clipboardItem;
-        //     // Do something with the blob.
-        //     appendImage(blob);
-        //     return;
-        //   } else {
-        //     // For files from `navigator.clipboard.read()`.
-        //     const imageTypes = clipboardItem.types?.filter((type) =>
-        //       type.startsWith("image/")
-        //     );
-        //     console.log("clipboardItem.types", clipboardItem.types);
-        //     for (const imageType of imageTypes) {
-        //       blob = await clipboardItem.getType(imageType);
-        //       // Do something with the blob.
-        //       appendImage(blob);
-        //       return;
-        //     }
-        //   }
-        //   try {
-        //     //get texts from clipboard
-        //     const textBlob = await clipboardItem.getType("text/plain");
-        //     const text = await textBlob.text();
-        //     appendText(text);
-        //   } catch (ex) {
-        //     console.error(ex);
-        //   }
-        // }
       });
 
       const appendText = (text) => {
