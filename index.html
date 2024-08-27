@@ -58,11 +58,11 @@
       (for other operating systems) to paste images anywhere in this page.
     </p>
     <hr />
-    <form>
+    <!-- <form>
       <h2>Form to test input focuses for safari</h2>
       <input type="text" placeholder="regular text input" />
       <textarea id="superfocus" placeholder="superfocus" autofocus></textarea>
-    </form>
+    </form> -->
     <hr />
 
     <div id="output"></div>
@@ -75,22 +75,22 @@
       //   e.target.focus(); //return focus to the input
       // });
 
-      document.addEventListener("drop", (e) => {
-        console.log("Dropping...");
-        e.preventDefault();
-        const files = e.dataTransfer.files;
-        for (const file of files) {
-          if (file.type.startsWith("image/")) {
-            appendImage(file);
-          } else {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              appendText(e.target.result);
-            };
-            reader.readAsText(file);
-          }
-        }
-      });
+      // document.addEventListener("drop", (e) => {
+      //   console.log("Dropping...");
+      //   e.preventDefault();
+      //   const files = e.dataTransfer.files;
+      //   for (const file of files) {
+      //     if (file.type.startsWith("image/")) {
+      //       appendImage(file);
+      //     } else {
+      //       const reader = new FileReader();
+      //       reader.onload = (e) => {
+      //         appendText(e.target.result);
+      //       };
+      //       reader.readAsText(file);
+      //     }
+      //   }
+      // });
 
       document.addEventListener("paste", async (e) => {
         console.log("Pasting...", e.clipboardData.files[0]);
